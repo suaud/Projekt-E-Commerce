@@ -5,9 +5,9 @@ import numpy as np
 
 sys.path.append(os.getcwd())
 
-from src.data_loader import DataLoader
-from src.preprocessor import DataPreprocessor
-from src.model import ProductClassifier
+from src.data_loader.data_loader import DataLoader
+from src.preprocessor.preprocessor import DataPreprocessor
+from src.model.model import ProductClassifier
 
 class Colors:
     HEADER = '\033[95m'
@@ -16,7 +16,9 @@ class Colors:
     YELLOW = '\033[93m'
     RED = '\033[91m'
     RESET = '\033[0m'
-    BOLD = '\033[1m'
+
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def print_stats(df):
     prices = df['price']
@@ -35,7 +37,8 @@ def print_stats(df):
         pass
 
 def main():
-    print(f"{Colors.BOLD}=== E-Commerce Price Analyzer (CENEO) ==={Colors.RESET}")
+    clear_screen()
+    print("=== E-Commerce Price Analyzer (CENEO) ===")
     
     loader = DataLoader()
     proc = DataPreprocessor()
@@ -43,10 +46,13 @@ def main():
 
     train_data = loader.get_training_data()
     model.train(train_data['text'], train_data['category'])
+    
+    input(f"\nModel gotowy. Naciśnij Enter aby rozpocząć...")
 
     while True:
         try:
-            q = input(f"\n{Colors.HEADER}Szukaj {Colors.RESET}(lub '{Colors.RED}exit{Colors.RESET}'): ").strip()
+            clear_screen()
+            q = input(f"{Colors.HEADER}Szukaj {Colors.RESET}(lub '{Colors.RED}exit{Colors.RESET}'): ").strip()
             if q == 'exit': break
             if len(q) < 2: continue
 
@@ -56,6 +62,7 @@ def main():
             df = loader.get_live_data(q)
             if df.empty:
                 print(f"{Colors.RED}Brak wyników.{Colors.RESET}")
+                input("\nNaciśnij Enter...")
                 continue
 
             df['clean'] = df['product_name'].apply(proc.clean_text)
@@ -85,11 +92,14 @@ def main():
 
                 print(f"{name:<50} | {p_str}")
             print("-" * 50)
+            
+            input("\nNaciśnij Enter aby szukać dalej...")
 
         except KeyboardInterrupt:
             break
         except Exception as e:
             print(e)
+            input()
 
 if __name__ == "__main__":
     main()
