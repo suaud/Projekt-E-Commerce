@@ -2,12 +2,15 @@ import sys
 import os
 import pandas as pd
 import numpy as np
+import time 
 
 sys.path.append(os.getcwd())
 
-from src.data_loader.data_loader import DataLoader
-from src.preprocessor.preprocessor import DataPreprocessor
-from src.model.model import ProductClassifier
+
+from src.data_loader import DataLoader
+from src.preprocessor import DataPreprocessor
+from src.model import ProductClassifier
+# --------------------------------------------
 
 class Colors:
     HEADER = '\033[95m'
@@ -18,6 +21,7 @@ class Colors:
     RESET = '\033[0m'
 
 def clear_screen():
+
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def print_stats(df):
@@ -38,11 +42,12 @@ def print_stats(df):
 
 def main():
     clear_screen()
-    print("=== E-Commerce Price Analyzer (CENEO) ===")
+    print("=== Price Analyzer v2 ===")
     
     loader = DataLoader()
     proc = DataPreprocessor()
     model = ProductClassifier()
+
 
     train_data = loader.get_training_data()
     model.train(train_data['text'], train_data['category'])
@@ -53,27 +58,34 @@ def main():
         try:
             clear_screen()
             q = input(f"{Colors.HEADER}Szukaj {Colors.RESET}(lub '{Colors.RED}exit{Colors.RESET}'): ").strip()
+            
             if q == 'exit': break
             if len(q) < 2: continue
+
 
             cat = model.predict(q)
             print(f"Kategoria: {Colors.BLUE}{cat}{Colors.RESET}")
 
+
             df = loader.get_live_data(q)
+            
             if df.empty:
                 print(f"{Colors.RED}Brak wyników.{Colors.RESET}")
                 input("\nNaciśnij Enter...")
                 continue
 
+
             df['clean'] = df['product_name'].apply(proc.clean_text)
             df = df.sort_values('price')
             
+
             if len(df) > 5:
                 df = df[df['price'] < df['price'].iloc[0] * 5]
 
             print_stats(df)
             
             avg_price = df['price'].mean()
+
 
             print("-" * 50)
             print(f"{'PRODUKT':<50} | {'CENA':<12}")
@@ -98,8 +110,8 @@ def main():
         except KeyboardInterrupt:
             break
         except Exception as e:
-            print(e)
-            input()
+            print(f"Błąd: {e}")
+            input("Naciśnij Enter...")
 
 if __name__ == "__main__":
     main()
